@@ -5,4 +5,9 @@
 *.lib
 *.idb
 *.csv
-*.zip
+*.ilk
+*.log
+*.tlog
+*.lastbuildstate
+*.recipe
+
