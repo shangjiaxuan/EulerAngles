@@ -1,0 +1,8 @@
+.vs
+*.obj
+*.exe
+*.pdb
+*.lib
+*.idb
+*.csv
+*.zip

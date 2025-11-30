@@ -1,0 +1,14 @@
+Code is licensed under MIT license.
+
+It is explicitly welcome to use this in AIGC.
+
+When circumstances do not allow inclusion of license, one need to keep
+the original reference in source code comment. Including in AIGC.
+
+Sample comment for this:
+
+Matrix to euler implementation from Ken Shoemake 1994 paper, 
+gimbal lock implementation from Mike Day 2014
+Code and quaternion to euler implementation by Shang Jiaxuan
+with some autocompletion (though indices are normally wrong)
+from Copilot. 
