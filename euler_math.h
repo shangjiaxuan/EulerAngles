@@ -4,151 +4,152 @@
 #include <cmath>
 
 
-// use your own
-template<typename T>
-struct tvector3
-{
-	T x, y, z;
-	constexpr T operator[](size_t index) const noexcept
-	{
-		return *(&x + index);
-	}
-	T& operator[](size_t index) noexcept
-	{
-		return *(&x + index);
-	}
-};
-
-// use your own
-template<typename T>
-struct tquaternion
-{
-	T w, x, y, z;
-private:
-	tquaternion(T w, T x, T y, T z) : w(w), x(x), y(y), z(z) {}
-public:
-	tquaternion() = default;
-	tquaternion(const tquaternion<T>&) = default;
-	tquaternion(tquaternion<T>&&) = default;
-	tquaternion<T>& operator=(const tquaternion<T>&) = default;
-	tquaternion<T>& operator=(tquaternion<T>&&) = default;
-	static constexpr tquaternion<T> from_real_pure(T real, const tvector3<T>& pure) noexcept
-	{
-		tquaternion<T> q;
-		q.w = real;
-		q.x = pure.x;
-		q.y = pure.y;
-		q.z = pure.z;
-		return q;
-	}
-
-	static constexpr tquaternion<T>	wxyz(T w, T x, T y, T z) noexcept
-	{
-		return 	tquaternion<T>{w, x, y, z};
-	}
-
-	static constexpr tquaternion<T>	xyzw(T x, T y, T z, T w) noexcept
-	{
-		return 	tquaternion<T>{w, x, y, z};
-	}
-
-	constexpr T real() const noexcept
-	{
-		return w;
-	}
-	constexpr tvector3<T> pure() const noexcept
-	{
-		return tvector3<T>{ x, y, z };
-	}
-};
-
-template<typename T>
-tquaternion<T> operator*(const tquaternion<T>& a, const tquaternion<T>& b) noexcept
-{
-	return tquaternion<T>::wxyz(
-		a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z,
-		a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,
-		a.w * b.y + a.y * b.w + a.z * b.x - a.x * b.z,
-		a.w * b.z + a.z * b.w + a.x * b.y - a.y * b.x);
-}
-
-// use your own, this one stores in row-major order
-template<typename T>
-struct tmatrix3
-{
-private:
-	T m[3][3];
-	constexpr tmatrix3(
-		T m00, T m01, T m02,
-		T m10, T m11, T m12,
-		T m20, T m21, T m22) noexcept :
-		m{
-			{m00, m01, m02},
-			{m10, m11, m12},
-			{m20, m21, m22}
-		}
-	{
-	}
-public:
-	tmatrix3() = default;
-	tmatrix3(const tmatrix3<T>&) = default;
-	tmatrix3(tmatrix3<T>&&) = default;
-	tmatrix3<T>& operator=(const tmatrix3<T>&) = default;
-	tmatrix3<T>& operator=(tmatrix3<T>&&) = default;
-
-	constexpr T operator()(size_t row, size_t column) const noexcept
-	{
-		return m[row][column];
-	}
-	T& operator()(size_t row, size_t column) noexcept
-	{
-		return m[row][column];
-	}
-	static tmatrix3<T> from_row_elements(
-		T m00, T m01, T m02,
-		T m10, T m11, T m12,
-		T m20, T m21, T m22) noexcept
-	{
-		return tmatrix3<T>(
-			m00, m01, m02,
-			m10, m11, m12,
-			m20, m21, m22
-		);
-	}
-	static tmatrix3<T> from_column_elements(
-		T m00, T m01, T m02,
-		T m10, T m11, T m12,
-		T m20, T m21, T m22) noexcept
-	{
-		return tmatrix3<T>(
-			m00, m10, m20,
-			m01, m11, m21,
-			m02, m12, m22
-		);
-	}
-};
-
-template<typename T>
-tmatrix3<T> operator*(const tmatrix3<T>& a, const tmatrix3<T>& b) noexcept
-{
-	return tmatrix3<T>::from_row_elements(
-		a(0, 0) * b(0, 0) + a(0, 1) * b(1, 0) + a(0, 2) * b(2, 0),
-		a(0, 0) * b(0, 1) + a(0, 1) * b(1, 1) + a(0, 2) * b(2, 1),
-		a(0, 0) * b(0, 2) + a(0, 1) * b(1, 2) + a(0, 2) * b(2, 2),
-
-		a(1, 0) * b(0, 0) + a(1, 1) * b(1, 0) + a(1, 2) * b(2, 0),
-		a(1, 0) * b(0, 1) + a(1, 1) * b(1, 1) + a(1, 2) * b(2, 1),
-		a(1, 0) * b(0, 2) + a(1, 1) * b(1, 2) + a(1, 2) * b(2, 2),
-
-		a(2, 0) * b(0, 0) + a(2, 1) * b(1, 0) + a(2, 2) * b(2, 0),
-		a(2, 0) * b(0, 1) + a(2, 1) * b(1, 1) + a(2, 2) * b(2, 1),
-		a(2, 0) * b(0, 2) + a(2, 1) * b(1, 2) + a(2, 2) * b(2, 2)
-	);
-}
-
-
 namespace math
 {
+
+	// use your own
+	template<typename T>
+	struct tvector3
+	{
+		T x, y, z;
+		constexpr T operator[](size_t index) const noexcept
+		{
+			return *(&x + index);
+		}
+		T& operator[](size_t index) noexcept
+		{
+			return *(&x + index);
+		}
+	};
+
+	// use your own
+	template<typename T>
+	struct tquaternion
+	{
+		T w, x, y, z;
+	private:
+		tquaternion(T w, T x, T y, T z) : w(w), x(x), y(y), z(z) {}
+	public:
+		tquaternion() = default;
+		tquaternion(const tquaternion<T>&) = default;
+		tquaternion(tquaternion<T>&&) = default;
+		tquaternion<T>& operator=(const tquaternion<T>&) = default;
+		tquaternion<T>& operator=(tquaternion<T>&&) = default;
+		static constexpr tquaternion<T> from_real_pure(T real, const tvector3<T>& pure) noexcept
+		{
+			tquaternion<T> q;
+			q.w = real;
+			q.x = pure.x;
+			q.y = pure.y;
+			q.z = pure.z;
+			return q;
+		}
+
+		static constexpr tquaternion<T>	wxyz(T w, T x, T y, T z) noexcept
+		{
+			return 	tquaternion<T>{w, x, y, z};
+		}
+
+		static constexpr tquaternion<T>	xyzw(T x, T y, T z, T w) noexcept
+		{
+			return 	tquaternion<T>{w, x, y, z};
+		}
+
+		constexpr T real() const noexcept
+		{
+			return w;
+		}
+		constexpr tvector3<T> pure() const noexcept
+		{
+			return tvector3<T>{ x, y, z };
+		}
+	};
+
+	template<typename T>
+	tquaternion<T> operator*(const tquaternion<T>& a, const tquaternion<T>& b) noexcept
+	{
+		return tquaternion<T>::wxyz(
+			a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z,
+			a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,
+			a.w * b.y + a.y * b.w + a.z * b.x - a.x * b.z,
+			a.w * b.z + a.z * b.w + a.x * b.y - a.y * b.x);
+	}
+
+	// use your own, this one stores in row-major order
+	template<typename T>
+	struct tmatrix3
+	{
+	private:
+		T m[3][3];
+		constexpr tmatrix3(
+			T m00, T m01, T m02,
+			T m10, T m11, T m12,
+			T m20, T m21, T m22) noexcept :
+			m{
+				{m00, m01, m02},
+				{m10, m11, m12},
+				{m20, m21, m22}
+			}
+		{
+		}
+	public:
+		tmatrix3() = default;
+		tmatrix3(const tmatrix3<T>&) = default;
+		tmatrix3(tmatrix3<T>&&) = default;
+		tmatrix3<T>& operator=(const tmatrix3<T>&) = default;
+		tmatrix3<T>& operator=(tmatrix3<T>&&) = default;
+
+		constexpr T operator()(size_t row, size_t column) const noexcept
+		{
+			return m[row][column];
+		}
+		T& operator()(size_t row, size_t column) noexcept
+		{
+			return m[row][column];
+		}
+		static tmatrix3<T> from_row_elements(
+			T m00, T m01, T m02,
+			T m10, T m11, T m12,
+			T m20, T m21, T m22) noexcept
+		{
+			return tmatrix3<T>(
+				m00, m01, m02,
+				m10, m11, m12,
+				m20, m21, m22
+			);
+		}
+		static tmatrix3<T> from_column_elements(
+			T m00, T m01, T m02,
+			T m10, T m11, T m12,
+			T m20, T m21, T m22) noexcept
+		{
+			return tmatrix3<T>(
+				m00, m10, m20,
+				m01, m11, m21,
+				m02, m12, m22
+			);
+		}
+	};
+
+	template<typename T>
+	tmatrix3<T> operator*(const tmatrix3<T>& a, const tmatrix3<T>& b) noexcept
+	{
+		return tmatrix3<T>::from_row_elements(
+			a(0, 0) * b(0, 0) + a(0, 1) * b(1, 0) + a(0, 2) * b(2, 0),
+			a(0, 0) * b(0, 1) + a(0, 1) * b(1, 1) + a(0, 2) * b(2, 1),
+			a(0, 0) * b(0, 2) + a(0, 1) * b(1, 2) + a(0, 2) * b(2, 2),
+
+			a(1, 0) * b(0, 0) + a(1, 1) * b(1, 0) + a(1, 2) * b(2, 0),
+			a(1, 0) * b(0, 1) + a(1, 1) * b(1, 1) + a(1, 2) * b(2, 1),
+			a(1, 0) * b(0, 2) + a(1, 1) * b(1, 2) + a(1, 2) * b(2, 2),
+
+			a(2, 0) * b(0, 0) + a(2, 1) * b(1, 0) + a(2, 2) * b(2, 0),
+			a(2, 0) * b(0, 1) + a(2, 1) * b(1, 1) + a(2, 2) * b(2, 1),
+			a(2, 0) * b(0, 2) + a(2, 1) * b(1, 2) + a(2, 2) * b(2, 2)
+		);
+	}
+
+
 	using std::sin;
 	using std::cos;
 	using std::atan2;
