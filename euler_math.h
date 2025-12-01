@@ -90,8 +90,7 @@ namespace math
 				{m10, m11, m12},
 				{m20, m21, m22}
 			}
-		{
-		}
+		{ }
 	public:
 		tmatrix3() = default;
 		tmatrix3(const tmatrix3<T>&) = default;
@@ -119,14 +118,14 @@ namespace math
 			);
 		}
 		static tmatrix3<T> from_column_elements(
-			T m00, T m01, T m02,
-			T m10, T m11, T m12,
-			T m20, T m21, T m22) noexcept
+			T m00, T m10, T m20,
+			T m01, T m11, T m21,
+			T m02, T m12, T m22) noexcept
 		{
 			return tmatrix3<T>(
-				m00, m10, m20,
-				m01, m11, m21,
-				m02, m12, m22
+				m00, m01, m02,
+				m10, m11, m12,
+				m20, m21, m22
 			);
 		}
 	};
@@ -376,8 +375,8 @@ namespace math
 		{
 			T s1 = sign_other * sqrt(m(j, i) * m(j, i) + m(k, i) * m(k, i));
 			r1 = atan2(s1, m(i, i));
-			r0 = p * atan2(sign_other * m(i, j), sign_other * m(i, k));
-			T s0 = sin(r0); T c0 = cos(r0);
+			r0 =  atan2(sign_other * m(i, j), p * sign_other * m(i, k));
+			T s0 = p * sin(r0); T c0 = cos(r0);
 			r2 = p * atan2(sign_other * (c0 * m(k, j) - s0 * m(k, k)),
 				sign_other * (c0 * m(j, j) - s0 * m(j, k)));
 		}
@@ -387,7 +386,7 @@ namespace math
 			T c1 = sign_other * sqrt(m(i, i) * m(i, i) + m(j, i) * m(j, i));
 			r1 = p * atan2(-m(k, i), c1);
 			r0 = p * atan2(sign_other * m(k, j), sign_other * m(k, k));
-			T s0 = sin(r0); T c0 = cos(r0);
+			T s0 = p * sin(r0); T c0 = cos(r0);
 			r2 = p * atan2(sign_other * (-c0 * m(i, j) + s0 * m(i, k)),
 				sign_other * (c0 * m(j, j) - s0 * m(j, k)));
 		}
@@ -482,7 +481,7 @@ namespace math
 	}
 
 	template<euler_angle_type type, typename T, bool use_other = false>
-	teuler_angles<type, T> to_euler_keep_sign_any(const tquaternion<T>& q) noexcept
+	teuler_angles<type, T> to_euler_SU2_any(const tquaternion<T>& q) noexcept
 	{
 		constexpr int i = euler_angles::get_i_axis(type);
 		constexpr int j = euler_angles::get_j_axis(type);
@@ -575,36 +574,36 @@ namespace math
 	}
 
 	template<euler_angle_type type, typename T>
-	teuler_angles<type, T> to_euler_keep_sign(const tquaternion<T>& q) noexcept
+	teuler_angles<type, T> to_euler_SU2(const tquaternion<T>& q) noexcept
 	{
-		return to_euler_keep_sign_any<type, T, false>(q);
+		return to_euler_SU2_any<type, T, false>(q);
 	}
 
 	template<euler_angle_type type, typename T>
-	teuler_angles<type, T> to_euler_keep_sign_other(const tquaternion<T>& q) noexcept
+	teuler_angles<type, T> to_euler_SU2_other(const tquaternion<T>& q) noexcept
 	{
-		return to_euler_keep_sign_any<type, T, true>(q);
+		return to_euler_SU2_any<type, T, true>(q);
 	}
 
 	template<euler_angle_type type, typename T>
 	teuler_angles<type, T> to_euler(const tquaternion<T>& q) noexcept
 	{
-		teuler_angles<type, T> su2_angles = to_euler_keep_sign<type>(q);
+		teuler_angles<type, T> su2_angles = to_euler_SU2<type>(q);
 		if (su2_angles.rot0 < -constants::pi<T>())
 		{
-			su2_angles.rot0 += constants::two_pi();
+			su2_angles.rot0 += constants::two_pi<T>();
 		}
 		else if (su2_angles.rot0 > constants::pi<T>())
 		{
-			su2_angles.rot0 -= constants::two_pi();
+			su2_angles.rot0 -= constants::two_pi<T>();
 		}
 		if (su2_angles.rot2 < -constants::pi<T>())
 		{
-			su2_angles.rot2 += constants::two_pi();
+			su2_angles.rot2 += constants::two_pi<T>();
 		}
 		else if (su2_angles.rot2 > constants::pi<T>())
 		{
-			su2_angles.rot2 -= constants::two_pi();
+			su2_angles.rot2 -= constants::two_pi<T>();
 		}
 		return su2_angles;
 	}
@@ -612,22 +611,22 @@ namespace math
 	template<euler_angle_type type, typename T>
 	teuler_angles<type, T> to_euler_other(const tquaternion<T>& q) noexcept
 	{
-		teuler_angles<type, T> su2_angles = to_euler_keep_sign_other<type>(q);
+		teuler_angles<type, T> su2_angles = to_euler_SU2_other<type>(q);
 		if (su2_angles.rot0 < -constants::pi<T>())
 		{
-			su2_angles.rot0 += constants::two_pi();
+			su2_angles.rot0 += constants::two_pi<T>();
 		}
 		else if (su2_angles.rot0 > constants::pi<T>())
 		{
-			su2_angles.rot0 -= constants::two_pi();
+			su2_angles.rot0 -= constants::two_pi<T>();
 		}
 		if (su2_angles.rot2 < -constants::pi<T>())
 		{
-			su2_angles.rot2 += constants::two_pi();
+			su2_angles.rot2 += constants::two_pi<T>();
 		}
 		else if (su2_angles.rot2 > constants::pi<T>())
 		{
-			su2_angles.rot2 -= constants::two_pi();
+			su2_angles.rot2 -= constants::two_pi<T>();
 		}
 		return su2_angles;
 	}

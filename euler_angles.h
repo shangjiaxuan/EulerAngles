@@ -40,7 +40,7 @@ namespace math
 	};
 
 	constexpr euler_angle_type EULER_ANGLES_XYZ = EULER_ANGLES_XYZs;
-	constexpr euler_angle_type EULER_ANGLES_XZY = EULER_ANGLES_XYZs;
+	constexpr euler_angle_type EULER_ANGLES_XZY = EULER_ANGLES_XZYs;
 	constexpr euler_angle_type EULER_ANGLES_YZX = EULER_ANGLES_YZXs;
 	constexpr euler_angle_type EULER_ANGLES_YXZ = EULER_ANGLES_YXZs;
 	constexpr euler_angle_type EULER_ANGLES_ZXY = EULER_ANGLES_ZXYs;
