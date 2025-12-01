@@ -360,7 +360,7 @@ namespace math
 	}
 
 	template<euler_angle_type type, typename T, bool use_other = false>
-	teuler_angles<type, T> to_euler_any(const tmatrix3<T>& m) noexcept
+	teuler_angles<type, T> to_euler(const tmatrix3<T>& m) noexcept
 	{
 		constexpr int i = euler_angles::get_i_axis(type);
 		constexpr int j = euler_angles::get_j_axis(type);
@@ -373,22 +373,44 @@ namespace math
 		T r0, r1, r2;
 		if (euler_angles::get_repetition(type))
 		{
-			T s1 = sign_other * sqrt(m(j, i) * m(j, i) + m(k, i) * m(k, i));
-			r1 = atan2(s1, m(i, i));
-			r0 =  atan2(sign_other * m(i, j), p * sign_other * m(i, k));
-			T s0 = p * sin(r0); T c0 = cos(r0);
-			r2 = p * atan2(sign_other * (c0 * m(k, j) - s0 * m(k, k)),
-				sign_other * (c0 * m(j, j) - s0 * m(j, k)));
+			T s1_ = sqrt(m(j, i) * m(j, i) + m(k, i) * m(k, i));
+			if (use_other)
+			{
+				r1 = atan2(-s1_, m(i, i));
+				r0 = atan2(- m(i, j), -p * m(i, k));
+				T s0 = p * sin(r0); T c0 = cos(r0);
+				r2 = p * atan2(-(c0 * m(k, j) - s0 * m(k, k)),
+					-(c0 * m(j, j) - s0 * m(j, k)));
+			}
+			else
+			{
+				r1 = atan2(s1_, m(i, i));
+				r0 = atan2(m(i, j), p * m(i, k));
+				T s0 = p * sin(r0); T c0 = cos(r0);
+				r2 = p * atan2((c0 * m(k, j) - s0 * m(k, k)),
+					(c0 * m(j, j) - s0 * m(j, k)));
+			}
 		}
 		// XYZ type, has sine as the singular one
 		else
 		{
-			T c1 = sign_other * sqrt(m(i, i) * m(i, i) + m(j, i) * m(j, i));
-			r1 = p * atan2(-m(k, i), c1);
-			r0 = p * atan2(sign_other * m(k, j), sign_other * m(k, k));
-			T s0 = p * sin(r0); T c0 = cos(r0);
-			r2 = p * atan2(sign_other * (-c0 * m(i, j) + s0 * m(i, k)),
-				sign_other * (c0 * m(j, j) - s0 * m(j, k)));
+			T c1_ = sign_other * sqrt(m(i, i) * m(i, i) + m(j, i) * m(j, i));
+			if (use_other)
+			{
+				r1 = p * atan2(-m(k, i), -c1_);
+				r0 = p * atan2(-m(k, j), -m(k, k));
+				T s0 = p * sin(r0); T c0 = cos(r0);
+				r2 = p * atan2(-(-c0 * m(i, j) + s0 * m(i, k)),
+					-(c0 * m(j, j) - s0 * m(j, k)));
+			}
+			else
+			{
+				r1 = p * atan2(-m(k, i), c1_);
+				r0 = p * atan2(m(k, j), m(k, k));
+				T s0 = p * sin(r0); T c0 = cos(r0);
+				r2 = p * atan2( (-c0 * m(i, j) + s0 * m(i, k)),
+					 (c0 * m(j, j) - s0 * m(j, k)));
+			}
 		}
 		teuler_angles<type, T> res;
 		if (euler_angles::get_rotating(type))
@@ -404,18 +426,6 @@ namespace math
 			res.rot2 = r2;
 		}
 		return res;
-	}
-
-	template<euler_angle_type type, typename T>
-	teuler_angles<type, T> to_euler(const tmatrix3<T>& m) noexcept
-	{
-		return to_euler_any<type, T, false>(m);
-	}
-
-	template<euler_angle_type type, typename T>
-	teuler_angles<type, T> to_euler_other(const tmatrix3<T>& m) noexcept
-	{
-		return to_euler_any<type, T, true>(m);
 	}
 
 	template<euler_angle_type type, typename T>
@@ -474,14 +484,61 @@ namespace math
 		return tquaternion<T>::from_real_pure(real, pure);
 	}
 
-	template<typename T>
-	T sign_from_bit(T x) noexcept
+	namespace euler_angles
 	{
-		return signbit(x) ? static_cast<T>(-1) : static_cast<T>(1);
+		constexpr int sign_repeating_c1(size_t r1_index)
+		{
+			return (r1_index >> 1) & 0x1;
+		}
+		constexpr int sign_repeating_s1(size_t r1_index)
+		{
+			return r1_index & 0x1;
+		}
+		constexpr int sign_repeating_s21(size_t r1_index)
+		{
+			return sign_repeating_c1(r1_index) ^ sign_repeating_s1(r1_index);
+		}
+
+		constexpr int sign_norepeat_c1ps1(size_t r1_index, bool sign_s21)
+		{
+			size_t idx = r1_index % 4;
+			switch(idx)
+			{
+				case 0:
+					return 0;
+				case 1:
+					return sign_s21;
+				case 2:
+					return !sign_s21;
+				case 3:
+					return 1;
+			}
+		}
+
+		constexpr int sign_norepeat_c1ms1(size_t r1_index, bool sign_s21)
+		{
+			size_t idx = r1_index % 4;
+			switch (idx)
+			{
+				case 0:
+					return 0;
+				case 1:
+					return !sign_s21;
+				case 2:
+					return sign_s21;
+				case 3:
+					return 1;
+			}
+		}
+
+		constexpr int sign_norepeat_c21(size_t r1_index)
+		{
+			return  ((r1_index >> 1) & 0x1) ^ (r1_index & 0x1);
+		}
 	}
 
-	template<euler_angle_type type, typename T, bool use_other = false>
-	teuler_angles<type, T> to_euler_SU2_any(const tquaternion<T>& q) noexcept
+	template<euler_angle_type type,  size_t r1_index = 0, typename T>
+	teuler_angles<type, T> to_euler_SU2(const tquaternion<T>& q) noexcept
 	{
 		constexpr int i = euler_angles::get_i_axis(type);
 		constexpr int j = euler_angles::get_j_axis(type);
@@ -490,7 +547,7 @@ namespace math
 		static_assert(i < 3 && j < 3 && k < 3);
 		static_assert(i != j && j != k && i != k);
 		constexpr T p = euler_angles::get_parity(type) ? static_cast<T>(-1) : static_cast<T>(1);
-		constexpr T sign_other = use_other ? static_cast<T>(-1) : static_cast<T>(1);
+		constexpr size_t solution_index = r1_index % 4;
 		T q0 = q.real();
 		tvector3 <T> qv = q.pure();
 		T q1 = qv[i];
@@ -502,11 +559,36 @@ namespace math
 			T c1 = q0 * q0 + q1 * q1 - q2 * q2 - q3 * q3;
 			T s_half1 = sqrt(q2 * q2 + q3 * q3);
 			T c_half1 = sqrt(q0 * q0 + q1 * q1);
-			r1 = sign_other * 2 * atan2(s_half1, c_half1);
-
 			T half0p2, half0m2;
-			half0p2 = atan2(q1, q0);
-			half0m2 = p * atan2(-sign_other * q3, sign_other * q2);
+			
+			if(euler_angles::sign_repeating_c1(solution_index))
+			{
+				half0p2 = atan2(-q1, -q0);
+				if (euler_angles::sign_repeating_s1(solution_index))
+				{
+					r1 = 2 * atan2(-s_half1, -c_half1);
+					half0m2 = p * atan2(q3, -q2);
+				}
+				else
+				{
+					r1 = 2 * atan2(s_half1, -c_half1);
+					half0m2 = p * atan2(-q3, q2);
+				}
+			}
+			else
+			{
+				half0p2 = atan2(q1, q0);
+				if (euler_angles::sign_repeating_s1(solution_index))
+				{
+					r1 = 2 * atan2(-s_half1, c_half1);
+					half0m2 = p * atan2(q3, -q2);
+				}
+				else
+				{
+					r1 = 2 * atan2(s_half1, c_half1);
+					half0m2 = p * atan2(-q3, q2);
+				}
+			}
 			r0 = half0p2 + half0m2;
 			r2 = half0p2 - half0m2;
 		}
@@ -527,34 +609,65 @@ namespace math
 			T s1_ = 2 * (q0 * q2 - p * q1 * q3);
 			T f00 = q0 + q2, f01 = q0 - q2;
 			T f10 = q1 - p * q3, f11 = q1 + p * q3;
-			T c1_ = sign_other * sqrt((f11 * f11 + f01 * f01) * (f10 * f10 + f00 * f00));
-			r1 = atan2(s1_, c1_);
-			if (!use_other)
+			T c1_ = sqrt((f11 * f11 + f01 * f01) * (f10 * f10 + f00 * f00));
+			T half0p2, half0m2;
+			const bool sign_s1_ = signbit(s1_);
+			switch (solution_index)
 			{
-				T half0p2 = atan2(f11, f01);
-				T half0m2 = atan2(f10, f00);
-				r0 = half0p2 + half0m2;
-				r2 = p * (half0p2 - half0m2);
+				case 0:
+					r1 = atan2(s1_, c1_);
+					half0p2 = atan2(f11, f01);
+					half0m2 = atan2(f10, f00);
+					break;
+				case 1:
+					r1 = atan2(s1_, -c1_);
+					if(sign_s1_)
+					{
+						half0p2 = atan2(f11, f01);
+						half0m2 = atan2(-f10, -f00);
+					}
+					else
+					{
+						half0p2 = atan2(-f11, -f01);
+						half0m2 = atan2(f10, f00);
+					}
+					break;
+				case 2:
+					{
+						if (sign_s1_)
+						{
+							r1 = atan2(s1_, -c1_) + constants::two_pi<T>();
+							half0p2 = atan2(-f11, -f01);
+							half0m2 = atan2(f10, f00);
+						}
+						else
+						{
+							r1 = atan2(s1_, -c1_) - constants::two_pi<T>();
+							half0p2 = atan2(f11, f01);
+							half0m2 = atan2(-f10, -f00);
+						}
+					}
+					break;
+				case 3:
+					if (sign_s1_)
+					{
+						r1 = atan2(s1_, c1_) + constants::two_pi<T>();
+						half0p2 = atan2(-f11, -f01);
+					}
+					else
+					{
+						r1 = atan2(s1_, c1_) - constants::two_pi<T>();
+						half0p2 = atan2(-f11, -f01);
+					}
+					half0m2 = atan2(-f10, -f00);
+					break;
+				default:
+				// we don't do platform specifics here
+				//__debugbreak(); // invalid axis
+					break;
 			}
-			else
-			{
-				// r1 < -pi/2, (c1+s1) <= 0 (c1-s1) > 0
-				if (signbit(s1_))
-				{
-					T half0p2 = atan2(f11, f01);
-					T half0m2 = atan2(-f10, -f00);
-					r0 = half0p2 + half0m2;
-					r2 = p * (half0p2 - half0m2);
-				}
-				// r1 > pi/2, (c1+s1) > 0 (c1-s1) <= 0
-				else
-				{
-					T half0p2 = atan2(-f11, -f01);
-					T half0m2 = atan2(f10, f00);
-					r0 = half0p2 + half0m2;
-					r2 = p * (half0p2 - half0m2);
-				}
-			}
+			r0 = half0p2 + half0m2;
+			r2 = p * (half0p2 - half0m2);
 		}
 		teuler_angles<type, T> res;
 		if (euler_angles::get_rotating(type))
@@ -570,48 +683,14 @@ namespace math
 			res.rot2 = r2;
 		}
 		return res;
-
 	}
+	
 
-	template<euler_angle_type type, typename T>
-	teuler_angles<type, T> to_euler_SU2(const tquaternion<T>& q) noexcept
-	{
-		return to_euler_SU2_any<type, T, false>(q);
-	}
-
-	template<euler_angle_type type, typename T>
-	teuler_angles<type, T> to_euler_SU2_other(const tquaternion<T>& q) noexcept
-	{
-		return to_euler_SU2_any<type, T, true>(q);
-	}
-
-	template<euler_angle_type type, typename T>
+	template<euler_angle_type type, bool use_other = false, typename T>
 	teuler_angles<type, T> to_euler(const tquaternion<T>& q) noexcept
 	{
-		teuler_angles<type, T> su2_angles = to_euler_SU2<type>(q);
-		if (su2_angles.rot0 < -constants::pi<T>())
-		{
-			su2_angles.rot0 += constants::two_pi<T>();
-		}
-		else if (su2_angles.rot0 > constants::pi<T>())
-		{
-			su2_angles.rot0 -= constants::two_pi<T>();
-		}
-		if (su2_angles.rot2 < -constants::pi<T>())
-		{
-			su2_angles.rot2 += constants::two_pi<T>();
-		}
-		else if (su2_angles.rot2 > constants::pi<T>())
-		{
-			su2_angles.rot2 -= constants::two_pi<T>();
-		}
-		return su2_angles;
-	}
-
-	template<euler_angle_type type, typename T>
-	teuler_angles<type, T> to_euler_other(const tquaternion<T>& q) noexcept
-	{
-		teuler_angles<type, T> su2_angles = to_euler_SU2_other<type>(q);
+		teuler_angles<type, T> su2_angles =
+			use_other ? to_euler_SU2<type, 1>(q) : to_euler_SU2<type, 0>(q);
 		if (su2_angles.rot0 < -constants::pi<T>())
 		{
 			su2_angles.rot0 += constants::two_pi<T>();
