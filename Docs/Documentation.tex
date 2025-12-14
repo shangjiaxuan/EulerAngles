@@ -198,6 +198,10 @@ column major in memory.
 \label{column_major_storage}
 \end{figure}
 
+Memorywise, you can consider these to be transposed to each other, but
+that only has meaning if you are doing memorywise "reinterpret\_cast" and
+do not care about other possibilities.
+
 \subsection{Vector Transforms}
 In geometric libraries, we represent positions as vectors, while rotations and
 other linear transformations as matrices. We can use column vectors, and multiply
@@ -213,6 +217,9 @@ v'^T &= (Mv)^T \\
 &= v^T M^T
 \end{split}
 \end{equation}
+
+Transformation matrices on row vectors are transposed compared to matrices on
+column vectors. This includes translations and other matrices.
 
 This is different from how one wants to store the matrix. One can make a matrix
 compose of rows while using column vectors. The mismatch only matters if
@@ -484,15 +491,16 @@ Normally we use Type \Rom{1} element to calculate $\theta_1$, and then with the 
 said assumption, use Type \Rom{2} to calculate $\theta_0, \theta_2$. Type \Rom{3} elements are
 discarded and only accessed on the special occasion of "Gimbal Lock".
 
-When at "Gimbal Lock" Type \Rom{1} element goes to 1, Type \Rom{2} elements go to 0. Type
-\Rom{3} elements give the relation of $\theta_0\pm\theta_2$, depending on the order of axis.
-Thus Type \Rom{3} elements stores all the information of the matrix when at "Gimbal Lock".
+When at "Gimbal Lock" Type \Rom{1} element goes to 1, Type \Rom{2} elements go to 0. Type \Rom{3}
+elements stores all the information of the matrix when at "Gimbal Lock", giving the relation of
+$\theta_0\pm\theta_2$, depending on the order of axis and which edge of the solution range it is on. 
 
 The naive approach behaves badly at "Gimbal Lock" because Type \Rom{1} element $\approx 1-\frac12 \delta^2$.
 Thus the error is approximately $\sqrt{2\mathtt{epsilon}}$. That is 3-4 digits for IEEE float.
 Shoemake's original paper already takles this by using Type \Rom{2} elements to approximate
-"Gimbal Lock" $\theta_1$ via $\arctantwo$, giving $\theta_1$ with $\mathtt{epsilon}$ order error.
-But the behavior is still erratic by requiring special treatment for "Gimbal Lock".
+the other trig function, and improve $\theta_1$ value at "Gimbal Lock" via $\arctantwo$, 
+giving $\theta_1$ with $\mathtt{epsilon}$ order error. But the behavior is still erratic by
+requiring special treatment for "Gimbal Lock".
 
 Mike's improvement is that Type \Rom{3} elements is used along with prior calculated
 $\theta_0$ to give $\theta_2$. This automatically satisfies the relationship between
@@ -861,7 +869,7 @@ Solution 3:
 \end{split}
 \end{equation}
 
-The solutions do not need to work on "Gimbal Lock" either, since they work
+The solutions do not need extra work on "Gimbal Lock" either, since they work
 in relations of $\frac{\theta_0}{2}\pm\frac{\theta_2}{2}$. 
 
 This direct quaternion to euler approach keeps the sign of quaternion, as
