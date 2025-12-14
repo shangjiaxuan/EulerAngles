@@ -1,17 +1,10 @@
 % !TeX program = pdflatex
 % !TeX encoding = UTF-8
 % Documentation.tex
-%
 
 \documentclass[UTF8, oneside]{article}
 \usepackage[a4paper, hmargin={1in, 1in}, vmargin={1in, 1in}]{geometry}
 \usepackage{titlesec}
-%\titleformat{\part}{\bfseries\centering\sffamily}{\huge\Roman{part}.}{10pt}{\huge}
-%\titleclass{\part}{top}
-%\titlespacing{\part}{0pt}{0pt}{0.5in}
-%\titleformat{\chapter}{\bfseries\sffamily}{\Large\arabic{chapter}.}{10pt}{\Large}
-%\titleclass{\chapter}{straight}
-%\titlespacing{\part}{0.5in}{0pt}{0.5in}
 \usepackage[unicode,breaklinks]{hyperref}
 
 \usepackage{amsmath}
@@ -80,17 +73,17 @@ implementation.
 
 \section{Conventions}
 There are occasions where many different terms can be commonly confused
-and used interchangably while they shouldn't. This section aims to clarify
+and used interchangeably while they shouldn't. This section aims to clarify
 those terms and establish a grounding for clear delivery.
 
 \subsection{Matrix Storage}
 When a matrix is stored in linear memory, the elements are normally tiled
 either row first or column first. This does NOT affect what matrix it
-represents, but is meerly a choice of storage.
+represents, but is merely a choice of storage.
 
 Similarly, one could choose to store a matrix in zig-zag order. This is
 often the case for what Vulkan calls \texttt{VK\_IMAGE\_LAYOUT\_SHADER\_READ\_ONLY\_OPTIMAL}
-for images since it optimizes memory contigency for nearby reads.
+for images since it optimizes memory contiguity for nearby reads.
 
 The following is a diagram of $4\times 4$ matrices stored in row major and
 column major in memory.
@@ -222,9 +215,9 @@ Transformation matrices on row vectors are transposed compared to matrices on
 column vectors. This includes translations and other matrices.
 
 This is different from how one wants to store the matrix. One can make a matrix
-compose of rows while using column vectors. The mismatch only matters if
-one wish to use SIMD, and using same row / column composition will result in
-simple linear combinations while mismatch will mean memory contigency for dot
+composed of rows while using column vectors. The mismatch only matters if
+one wishes to use SIMD, and using same row / column composition will result in
+simple linear combinations while mismatch will mean memory contiguity for dot
 products.
 
 \subsection{Coordinate Handedness}
@@ -241,8 +234,8 @@ transforms. Only rotations are affected.
 
 \subsection{Rotations}
 Rotations are not vectors. Angular speed is a pseudo-vector. Pseudo-vectors
-behaves differently in spatial inversions, and is actually shorthand for
-tensors with Levi-Civita Symbol.
+behave differently in spatial inversions, and are actually shorthand for
+tensors with the Levi-Civita Symbol.
 \begin{equation}
 \begin{split}
 \mathbf{C} &= \mathbf{A}\times\mathbf{B}\\
@@ -485,7 +478,7 @@ Mike Day's 2014 improvement on "Gimbal Lock" location can be summarized as such:
 The euler angle matrix elements can be categorized into three categories. 1 Type \Rom{1}
 element that is the single one with $\sin\theta_1$ or $\cos\theta_1$. 4 Type \Rom{2}
 elements that are one term with the other trig function of $\theta_1$. 4 Type \Rom{3}
-elementa that are the most complicated, with two terms mixing everything.
+elements that are the most complicated, with two terms mixing everything.
 
 Normally we use Type \Rom{1} element to calculate $\theta_1$, and then with the previously
 said assumption, use Type \Rom{2} to calculate $\theta_0, \theta_2$. Type \Rom{3} elements are
@@ -582,7 +575,7 @@ m_{jj}\times\cos\theta_0-pm_{jk}\times\sin\theta_0)
 \end{equation}
 
 Another numerically stable method that doesn't require specially treating
-"Gimbal Lock" is CERN CLHEP's method. But when tried out seemd to be less
+"Gimbal Lock" is CERN CLHEP's method. But when tried out seemed to be less
 accurate than this one.
 
 That method uses the following relations:
